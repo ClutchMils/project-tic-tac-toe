@@ -1,19 +1,19 @@
 const gameBoard = (() => {
-  let gameboard = ["x", "o", "x", "x", "o", "o", "o", "o", ""];
+  let gameboard = ["", "", "", "", "", "", "", "", ""];
 
   const getBoard = () => {
     return gameboard;
   };
 
   const placeMark = (index = null, marker = "") => {
-    return gameboard.splice(index, 1, marker);
+    return (gameboard[index] = marker);
   };
 
   const resetBoard = () => {
     gameboard = ["", "", "", "", "", "", "", "", ""];
   };
 
-  return { getBoard, placeMark, resetBoard };
+  return { getBoard, placeMark, resetBoard};
 })();
 
 function Player(name, marker) {
@@ -24,12 +24,18 @@ function Player(name, marker) {
   this.marker = marker;
 }
 
-const gameController = ((Player1, Player2) => {
-  let currentPlayer = Player1;
-  let flag = 0;
+Player.prototype.sayHello = function () {
+  console.log("Hello, I'm a player!");
+};
+
+const player1 = new Player("Andre", "X");
+const player2 = new Player("Also Andre", "O");
+
+const gameController = (() => {
+  let currentPlayer = player1;
 
   const switchPlayer = () => {
-    currentPlayer = currentPlayer === Player1 ? Player2 : Player1;
+    currentPlayer = currentPlayer === player1 ? player2 : player1;
 
     return currentPlayer;
   };
@@ -46,46 +52,104 @@ const gameController = ((Player1, Player2) => {
       [2, 4, 6],
     ];
 
-    let currentBoard = gameBoard.getBoard();
+    const board = gameBoard.getBoard();
 
-    winningCombos.forEach((element) => {
-      let testWin = [];
-      element.forEach((element) => {
-        testWin.push(currentBoard[element]);
-      });
+    for (let combo of winningCombos) {
+      const [a, b, c] = combo;
 
-      const winCondtion1 = ["x", "x", "x"];
-      const winCondtion2 = ["o", "o", "o"];
-
-      
-
-      const arraysEqual = (testWin, winCondtion1, winCondtion2) => {
-        // First, check if the lengths are the same. If not, they're not equal.
-        if (testWin.length !== winCondtion1.length) {
-          return false;
-        }
-
-        // Then, check if every element in arr1 strictly matches the element
-        // at the same index in arr2 or arr3.
-        return (
-          testWin.every((value, index) => value === winCondtion1[index]) ||
-          testWin.every((value, index) => value === winCondtion2[index])
-        );
-      };
-
-      console.log(testWin);
-      console.log(arraysEqual(testWin, winCondtion1, winCondtion2));
-      if (arraysEqual(testWin, winCondtion1, winCondtion2) == true){
-        console.log("winner");
-        flag = 1;
+      if (board[a] === board[b] && board[b] === board[c] && board[a] !== "") {
+        return true;
       }
-      return flag;
-    });
+    }
+
+    return false;
   };
 
   const checkDraw = () => {
-   
+    const board = gameBoard.getBoard();
+    if (!board.includes("")) {
+      console.log("draw");
+      return true;
+    }
+    return false;
   };
 
-  return { switchPlayer, checkWinner };
+  const playRounds = (index) => {
+    const cleanIndex = Number(index);
+    if (index === undefined || isNaN(index)) return;
+
+    // The rest of the code only runs if index is a valid number
+    console.log("Processing round for:", index);
+
+    // Temporary: flash the button green when clicked
+    const btn = document.querySelector(`[data-index="${index}"]`);
+    btn.style.backgroundColor = "lightgreen";
+    setTimeout(() => (btn.style.backgroundColor = ""), 200);
+
+    gameBoard.placeMark(cleanIndex, currentPlayer.marker);
+    let checkWinner = gameController.checkWinner();
+    let checkDraw = gameController.checkDraw();
+
+    if (checkWinner == true) {
+      console.log("win");
+      return `${currentPlayer.name} wins`;
+    }
+
+    if (checkDraw == true) {
+      console.log("draw");
+      return "draw";
+    } else {
+      console.log("continue");
+      gameController.switchPlayer();
+      return "continue";
+    }
+  };
+
+  return { switchPlayer, checkWinner, checkDraw, playRounds };
 })();
+
+const displayController = (() => {
+  const boardElement = document.querySelector("#game-board");
+  const resetBtn = document.querySelector("#reset-btn");
+
+  // Private function: Updates the text inside the buttons based on the game board array
+  const render = (boardArray) => {
+    const buttons = boardElement.querySelectorAll(".cell");
+    buttons.forEach((btn, index) => {
+      btn.textContent = boardArray[index];
+    });
+  };
+
+   const resetRender = () => {
+     const buttons = boardElement.querySelectorAll(".cell");
+     buttons.forEach((btn) => {
+       btn.textContent = "";
+     });
+   };
+
+  // Public: Bind the click event to the controller
+  boardElement.addEventListener("click", (e) => {
+    const btn = e.target.closest(".cell");
+    if (!btn) return;
+
+    const index = +btn.dataset.index;
+
+    // Check if the cell is empty before playing (logic protection)
+    if (btn.textContent === "") {
+      gameController.playRounds(index);
+      render(gameBoard.getBoard());
+    }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    gameBoard.resetBoard();
+    resetRender()
+  });
+
+  // Return only what is necessary for other modules to use
+  return {
+    render, resetRender,
+  };
+})();
+
+
