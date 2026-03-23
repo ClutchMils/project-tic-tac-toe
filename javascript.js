@@ -87,7 +87,6 @@ const gameController = (() => {
   const checkDraw = () => {
     const board = gameBoard.getBoard();
     if (!board.includes("")) {
-      // console.log("draw");
       return true;
     }
     return false;
@@ -111,8 +110,6 @@ const gameController = (() => {
     setTimeout(() => (btn.style.backgroundColor = ""), 200);
 
     gameBoard.placeMark(cleanIndex, currentPlayer.marker);
-    // let checkWinner = gameController.checkWinner();
-    // let checkDraw = gameController.checkDraw();
 
     if (checkWinner()) {
       gameActive = false;
@@ -180,7 +177,7 @@ const displayController = (() => {
     modal.style.display = "flex";
   });
 
- let modal; // 👈 store reference
+ let modal; // store reference
 
  const signUpForm = () => {
    modal = document.createElement("div");
